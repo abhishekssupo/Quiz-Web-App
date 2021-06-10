@@ -4,9 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:quizapp/services/database.dart';
 import 'package:quizapp/views/create_quiz.dart';
 import 'package:quizapp/views/play_quiz.dart';
+import 'package:quizapp/views/signin.dart';
 import 'package:quizapp/widgets/widgets.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 final _firestore = FirebaseFirestore.instance;
+final auth = FirebaseAuth.instance;
+final String admin = "supo@email.com";
 
 class HomePage extends StatefulWidget {
   @override
@@ -47,6 +51,18 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
+        actions: [
+          IconButton(
+              icon: Icon(
+                Icons.logout,
+                color: Colors.black,
+              ),
+              onPressed: () {
+                auth.signOut();
+                Navigator.pushReplacement(
+                    context, MaterialPageRoute(builder: (context) => SignIn()));
+              })
+        ],
       ),
       body: SafeArea(
         child: Column(
@@ -55,13 +71,15 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add),
-        onPressed: () {
-          Navigator.push(
-              context, MaterialPageRoute(builder: (context) => CreateQuiz()));
-        },
-      ),
+      floatingActionButton: (admin == auth.currentUser.email)
+          ? FloatingActionButton(
+              child: Icon(Icons.add),
+              onPressed: () {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => CreateQuiz()));
+              },
+            )
+          : null,
     );
   }
 }
@@ -128,11 +146,17 @@ class QuizTile extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: Image.network(
-                imgUrl,
-                width: MediaQuery.of(context).size.width - 48,
-                fit: BoxFit.cover,
-              ),
+              child: (imgUrl != null)
+                  ? Image.network(
+                      imgUrl,
+                      width: MediaQuery.of(context).size.width - 48,
+                      fit: BoxFit.cover,
+                    )
+                  : Image.asset(
+                      "images/default_img.png",
+                      width: MediaQuery.of(context).size.width - 48,
+                      fit: BoxFit.cover,
+                    ),
             ),
             Container(
               decoration: BoxDecoration(
@@ -143,6 +167,20 @@ class QuizTile extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  (admin == auth.currentUser.email)
+                      ? IconButton(
+                          icon: Icon(
+                            Icons.delete,
+                            color: Colors.white,
+                          ),
+                          onPressed: () {
+                            deleteQuizDialog(context, quizId);
+                          })
+                      : Container(
+                          height: 0,
+                          width: 0,
+                          color: Colors.transparent,
+                        ),
                   Text(
                     title,
                     style: TextStyle(
@@ -170,4 +208,50 @@ class QuizTile extends StatelessWidget {
       ),
     );
   }
+}
+
+deleteQuizDialog(BuildContext context, String quizId) {
+  return showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          title: Text(
+            'Are you sure you want to delete?',
+            style: TextStyle(
+                color: Colors.black87,
+                fontSize: 16.0,
+                fontWeight: FontWeight.bold),
+          ),
+          actions: [
+            MaterialButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text(
+                'No',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+            ),
+            MaterialButton(
+              onPressed: () {
+                _firestore.collection('Quiz').doc(quizId).delete();
+                Navigator.pop(context);
+              },
+              child: Text(
+                'Yes',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+            ),
+          ],
+        );
+      });
 }

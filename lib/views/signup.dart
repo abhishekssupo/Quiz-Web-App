@@ -6,6 +6,7 @@ import 'package:quizapp/views/signin.dart';
 import 'package:quizapp/widgets/widgets.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:google_sign_in_web/google_sign_in_web.dart';
 
 class SignUp extends StatefulWidget {
   @override

@@ -5,6 +5,8 @@ import 'package:quizapp/views/signup.dart';
 import 'package:quizapp/widgets/widgets.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'home.dart';
+import 'package:google_sign_in_web/google_sign_in_web.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class SignIn extends StatefulWidget {
   @override
@@ -13,6 +15,7 @@ class SignIn extends StatefulWidget {
 
 class _SignInState extends State<SignIn> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final _googleSignIn = GoogleSignIn();
   final _formKey = GlobalKey<FormState>();
   String email, password;
   AuthServices authServices;
@@ -114,6 +117,45 @@ class _SignInState extends State<SignIn> {
                     ),
                     child: Text(
                       "Sign in",
+                      style: TextStyle(color: Colors.white, fontSize: 16),
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  height: 18,
+                ),
+                GestureDetector(
+                  onTap: () async {
+                    final GoogleSignIn googleSignIn = GoogleSignIn();
+                    final GoogleSignInAccount googleSignInAccount =
+                        await googleSignIn.signIn();
+                    final GoogleSignInAuthentication
+                        googleSignInAuthentication =
+                        await googleSignInAccount.authentication;
+                    final AuthCredential credential =
+                        GoogleAuthProvider.credential(
+                      idToken: googleSignInAuthentication.idToken,
+                      accessToken: googleSignInAuthentication.accessToken,
+                    );
+                    UserCredential result =
+                        await auth.signInWithCredential(credential);
+                    User userDetails = result.user;
+                    if (result == null) {
+                    } else {
+                      Navigator.pushReplacement(context,
+                          MaterialPageRoute(builder: (context) => HomePage()));
+                    }
+                  },
+                  child: Container(
+                    padding: EdgeInsets.symmetric(vertical: 18),
+                    alignment: Alignment.center,
+                    width: MediaQuery.of(context).size.width - 48,
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: Text(
+                      "Google Sign in",
                       style: TextStyle(color: Colors.white, fontSize: 16),
                     ),
                   ),
